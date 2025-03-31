@@ -68,7 +68,7 @@ function cpu_vars {
         add_var 'ECO_CI_SCI_USAGE_DURATION' 126144000
     # hetzner vm we use for GitLab CI
     elif [[ "$machine_power_data" == "hetzner_EPYC_7742_shared.sh" ]]; then
-        echo 'hetzner_EPYC_7742_shared.sh'
+        echo 'Using hetzner_EPYC_7742_shared.sh'
         add_var 'ECO_CI_MODEL_NAME' 'EPYC_7742'
         # we assume a disk size of 1344 GB total according to https://gitlab.com/gitlab-org/gitlab-runner/-/issues/29107
         # which claims runners have 21 GB of disk space with a splitting facttor of 1/64
