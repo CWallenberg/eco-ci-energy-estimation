@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Call the function to read and set the variables
+# Import vars funtions.
+# Other than in the other files we do NOT read the vars, bc we do not read them in this file
+# Rather we must initialize them
 source "$(dirname "$0")/vars.sh"
-read_vars
 
 # takes argument machine_power_data = $1
 function start_measurement {
@@ -12,11 +13,13 @@ function start_measurement {
     fi
     mkdir -p "/tmp/eco-ci"
 
+    initialize_vars
+
     # check if date returns a timestamp accurate to microseconds (16 digits)
     # if not probably coreutils are missing (that's the case with alpine)
-    microseconds=$(date "+%s%6N")
+    local microseconds=$(date "+%s%6N")
     if (( ${#microseconds} < 16 )); then
-      echo "ERROR: Date has returned a timestamp that is not accurate to microseconds! You may need to install coreutils."
+      echo "ERROR: Date has returned a timestamp that is not accurate to microseconds! You may need to install coreutils." >&2
       exit 1
     fi
 
@@ -41,13 +44,16 @@ function start_measurement {
     add_var 'ECO_CI_FILTER_PROJECT' "${11}"
     add_var 'ECO_CI_FILTER_MACHINE' "${12}"
     add_var 'ECO_CI_FILTER_TAGS' "${13}"
-    add_var 'ECO_CI_CALCULATE_CO2' "${14}"
-    add_var 'ECO_CI_GMT_API_TOKEN' "${15}"
-    add_var 'ECO_CI_ELECTRICITYMAPS_API_TOKEN' "${16}"
-    add_var 'ECO_CI_JSON_OUTPUT' "${17}"
-    add_var 'ECO_CI_API_ENDPOINT_ADD' "${18}"
-    add_var 'ECO_CI_API_ENDPOINT_BADGE_GET' "${19}"
-    add_var 'ECO_CI_DASHBOARD_URL' "${20}"
+    add_var 'ECO_CI_CO2_CALCULATION_METHOD' "${14}"
+    add_var 'ECO_CI_CO2_GRID_INTENSITY_CONSTANT' "${15}"
+    add_var 'ECO_CI_CO2_GRID_INTENSITY_API_TOKEN' "${16}"
+    add_var 'ECO_CI_GMT_API_TOKEN' "${17}"
+    add_var 'ECO_CI_JSON_OUTPUT' "${18}"
+    add_var 'ECO_CI_API_ENDPOINT_ADD' "${19}"
+    add_var 'ECO_CI_API_ENDPOINT_BADGE_GET' "${20}"
+    add_var 'ECO_CI_DASHBOARD_URL' "${21}"
+
+    read_vars # reload set vars
 
     touch /tmp/eco-ci/cpu-util-step.txt
     touch /tmp/eco-ci/cpu-util-total.txt
@@ -55,11 +61,18 @@ function start_measurement {
     touch /tmp/eco-ci/energy-total.txt
     touch /tmp/eco-ci/timer-step.txt
 
-    if [[ "${14}" == 'true' ]]; then
+    if [[ "${ECO_CI_CO2_CALCULATION_METHOD}" == 'location-based' ]]; then
         source "$(dirname "$0")/misc.sh"
         get_geoip # will set $ECO_CI_GEO_CITY, $ECO_CI_GEO_LAT, $ECO_CI_GEO_LONG and $ECO_CI_GEO_IP
         read_vars # reload set vars
         get_carbon_intensity # will set $ECO_CI_CO2I
+    elif [[ "${ECO_CI_CO2_CALCULATION_METHOD}" == 'constant' ]]; then
+        echo "Using constant for CO2 grid intensity: ${ECO_CI_CO2_GRID_INTENSITY_CONSTANT}"
+        add_var 'ECO_CI_CO2I' "$ECO_CI_CO2_GRID_INTENSITY_CONSTANT"
+        add_var 'ECO_CI_GEO_CITY' "CONSTANT"
+    else
+        echo "Eco CI CO2 Calculation Method can only be constant or location based. You provided: ${ECO_CI_CO2_CALCULATION_METHOD}" >&2
+        exit 1
     fi
 
     ##  we now save first energy data from the beginning of the function until here
@@ -73,10 +86,6 @@ function start_measurement {
         source "$(dirname "$0")/make_measurement.sh"
         make_inference # will populate /tmp/eco-ci/energy-step.txt
     fi
-
-    # save the values for the overhead
-    sed '/^[[:space:]]*$/d' /tmp/eco-ci/cpu-util-step.txt >> /tmp/eco-ci/cpu-util-total.txt
-    sed '/^[[:space:]]*$/d' /tmp/eco-ci/energy-step.txt >> /tmp/eco-ci/energy-total.txt
 
 }
 
@@ -118,7 +127,7 @@ function end_measurement {
 option="$1"
 
 if [[ "$option" == 'start_measurement' && $# -lt 19 ]]; then
-    echo "Error: Insufficient arguments provided. Listing supplied arguments:"
+    echo "Error: Insufficient arguments provided. Listing supplied arguments:" >&2
     for arg in "$@"; do
       echo "Argument: $arg"
     done
@@ -127,7 +136,7 @@ fi
 
 case $option in
   start_measurement)
-    start_measurement "$2" "$3" "$4" "$5" "$6" "$7" "$8" "$9" "${10}" "${11}" "${12}" "${13}" "${14}" "${15}" "${16}" "${17}" "${18}" "${19}" "${20}" "${21}"
+    start_measurement "$2" "$3" "$4" "$5" "$6" "$7" "$8" "$9" "${10}" "${11}" "${12}" "${13}" "${14}" "${15}" "${16}" "${17}" "${18}" "${19}" "${20}" "${21}" "${22}"
     ;;
   lap_measurement)
     lap_measurement
