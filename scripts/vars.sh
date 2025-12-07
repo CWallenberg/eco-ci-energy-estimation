@@ -64,7 +64,7 @@ function cpu_vars {
         echo 'Using gitlab_EPYC_7B12_saas-linux-small-amd64.sh'
         add_var 'ECO_CI_MODEL_NAME' 'EPYC_7B12'
         # we assume a disk size of 1344 GB total according to https://gitlab.com/gitlab-org/gitlab-runner/-/issues/29107
-        # which claims runners have 21 GB of disk space with a splitting factor of 1/64
+        # which claims runners have 21 GB of disk space with a splitting f actor of 1/64
         # FROM https://datavizta.boavizta.org/serversimpact
         # This totals to 1173.7 kg. With a 1/64 splitting this is 18339.0625 gCO2e
         add_var 'ECO_CI_SCI_M' 18339.0625;
@@ -74,6 +74,17 @@ function cpu_vars {
     elif [[ "$machine_power_data" == "hetzner_EPYC_7742_shared.sh" ]]; then
         echo 'Using hetzner_EPYC_7742_shared.sh'
         add_var 'ECO_CI_MODEL_NAME' 'EPYC_7742'
+        # we assume a disk size of 1344 GB total according to https://gitlab.com/gitlab-org/gitlab-runner/-/issues/29107
+        # which claims runners have 21 GB of disk space with a splitting facttor of 1/64
+        # FROM https://datavizta.boavizta.org/serversimpact
+        # This totals to 1173.7 kg. With a 1/64 splitting this is 18339,0625 gCO2e
+        add_var 'ECO_CI_SCI_M' 18339.0625;
+        # we use 4 years - 1*60*60*24*365*4 =
+        add_var 'ECO_CI_SCI_USAGE_DURATION' 126144000
+    # Fyfe vDedi vm we use for GitLab CI
+    elif [[ "$machine_power_data" == "fyfe_xeon_e5_2697-v4_2_CPU.sh" ]]; then
+        echo 'Using fyfe_xeon_e5_2697-v4_2_CPU.sh'
+        add_var 'ECO_CI_MODEL_NAME' 'XEON_E5_2697-v4'
         # we assume a disk size of 1344 GB total according to https://gitlab.com/gitlab-org/gitlab-runner/-/issues/29107
         # which claims runners have 21 GB of disk space with a splitting facttor of 1/64
         # FROM https://datavizta.boavizta.org/serversimpact
