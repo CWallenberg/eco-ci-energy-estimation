@@ -81,6 +81,16 @@ function cpu_vars {
         add_var 'ECO_CI_SCI_M' 18339.0625;
         # we use 4 years - 1*60*60*24*365*4 =
         add_var 'ECO_CI_SCI_USAGE_DURATION' 126144000
+    # hetzner CPX32 EPYC 9654
+    elif [[ "$machine_power_data" == "hetzner_EPYC_9654_CPX32_shared_amd64.sh" ]]; then
+        echo 'Using hetzner_EPYC_9654_CPX32_shared_amd64.sh'
+        add_var 'ECO_CI_MODEL_NAME' 'EPYC_9654'
+        # FROM https://datavizta.boavizta.org/serversimpact
+        # we assume a disk size of 448 GB total.
+        # This totals to 1151.7 kg. With a 4/128 splitting this is 35,990.625 gCO2e
+        add_var 'ECO_CI_SCI_M' 35990.625;
+        # we use 4 years - 1*60*60*24*365*4 =
+        add_var 'ECO_CI_SCI_USAGE_DURATION' 126144000
     # Fyfe vDedi vm we use for GitLab CI
     elif [[ "$machine_power_data" == "fyfe_xeon_e5_2697-v4_2_CPU.sh" ]]; then
         echo 'Using fyfe_xeon_e5_2697-v4_2_CPU.sh'
